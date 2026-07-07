@@ -1058,10 +1058,11 @@ class icit_srdb {
                                 $edited_data = $this->recursive_unserialize_replace( $search, $replace, $data_to_fix );
                             } catch ( \Throwable $error ) {
                                 $error_msg = $error->getMessage();
-                                if ( $this->verbose ) {
+                                if ( $this->debug ) {
                                     $this->add_error( $error_msg, 'results' );
                                 } else {
                                     if ( ! isset( $seen_unserialize_errors[ $error_msg ] ) ) {
+                                        $this->add_error( $error_msg, 'results' );
                                         $seen_unserialize_errors[ $error_msg ] = 0;
                                     }
                                     $seen_unserialize_errors[ $error_msg ]++;
