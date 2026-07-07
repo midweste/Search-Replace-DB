@@ -998,6 +998,7 @@ class icit_srdb {
                 // create new table report instance
                 $new_table_report          = $table_report;
                 $new_table_report['start'] = microtime( true );
+                $seen_unserialize_errors   = array();
 
                 $this->log( 'search_replace_table_start', $table, $search, $replace );
 
@@ -1049,7 +1050,22 @@ class icit_srdb {
                             }
 
                             // Run a search replace on the data that'll respect the serialisation.
-                            $edited_data = $this->recursive_unserialize_replace( $search, $replace, $data_to_fix );
+                            try {
+                                $edited_data = $this->recursive_unserialize_replace( $search, $replace, $data_to_fix );
+                            } catch ( \Throwable $error ) {
+                                $error_key = $error->getMessage();
+                                if ( ! isset( $seen_unserialize_errors[ $error_key ] ) ) {
+                                    $this->add_error(
+                                        $error_key
+                                        . ' :: This is usually caused by a plugin storing classes as a serialised string'
+                                        . ' which other PHP classes can\'t then access. Most commonly a Yoast plugin.',
+                                        'results'
+                                    );
+                                    $seen_unserialize_errors[ $error_key ] = 0;
+                                }
+                                $seen_unserialize_errors[ $error_key ]++;
+                                continue;
+                            }
 
                             // Something was changed
                             if ( $edited_data != $data_to_fix ) {
@@ -1102,6 +1118,16 @@ class icit_srdb {
                 }
 
                 $new_table_report['end'] = microtime( true );
+
+                // report suppressed duplicate unserialize errors
+                foreach ( $seen_unserialize_errors as $err_msg => $count ) {
+                    if ( $count > 1 ) {
+                        $this->add_error(
+                            'Table "' . $table . '": ' . ( $count - 1 ) . ' additional occurrence(s) of: ' . $err_msg,
+                            'results'
+                        );
+                    }
+                }
 
                 // store table report in main
                 $report['table_reports'][ $table ] = $new_table_report;
