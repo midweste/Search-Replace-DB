@@ -873,12 +873,9 @@ class icit_srdb {
             }
 
         } catch ( Error $error ) {
-            $this->add_error( $error->getMessage(), 'results');
+            throw $error;
         } catch ( Exception $error ) {
-            $this->add_error( $error->getMessage() . ':: This is usually caused by a plugin storing classes as a
-		    serialised string which other PHP classes can\'t then access. It is not possible to unserialise this data
-		    because the PHP can\'t access this class. P.S. It\'s most commonly a Yoast plugin that causes this error.',
-                'results' );
+            throw $error;
         }
 
         return $data;
@@ -1113,16 +1110,14 @@ class icit_srdb {
                                 $edited_data = $this->recursive_unserialize_replace( $search, $replace, $data_to_fix );
                             } catch ( \Throwable $error ) {
                                 $error_key = $error->getMessage();
-                                if ( ! isset( $seen_unserialize_errors[ $error_key ] ) ) {
-                                    $this->add_error(
-                                        $error_key
-                                        . ' :: This is usually caused by a plugin storing classes as a serialised string'
-                                        . ' which other PHP classes can\'t then access. Most commonly a Yoast plugin.',
-                                        'results'
-                                    );
-                                    $seen_unserialize_errors[ $error_key ] = 0;
+                                if ( $this->verbose ) {
+                                    $this->add_error( $error_key, 'results' );
+                                } else {
+                                    if ( ! isset( $seen_unserialize_errors[ $error_key ] ) ) {
+                                        $seen_unserialize_errors[ $error_key ] = 0;
+                                    }
+                                    $seen_unserialize_errors[ $error_key ]++;
                                 }
-                                $seen_unserialize_errors[ $error_key ]++;
                                 continue;
                             }
 
