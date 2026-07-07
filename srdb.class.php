@@ -873,9 +873,16 @@ class icit_srdb {
             }
 
         } catch ( Error $error ) {
-            throw $error;
+            throw new \RuntimeException( $error->getMessage(), 0, $error );
         } catch ( Exception $error ) {
-            throw $error;
+            throw new \RuntimeException(
+                $error->getMessage() . ':: This is usually caused by a plugin storing classes as a'
+                . ' serialised string which other PHP classes can\'t then access. It is not possible to'
+                . ' unserialise this data because the PHP can\'t access this class. P.S. It\'s most commonly'
+                . ' a Yoast plugin that causes this error.',
+                0,
+                $error
+            );
         }
 
         return $data;
@@ -1109,14 +1116,14 @@ class icit_srdb {
                             try {
                                 $edited_data = $this->recursive_unserialize_replace( $search, $replace, $data_to_fix );
                             } catch ( \Throwable $error ) {
-                                $error_key = $error->getMessage();
+                                $error_msg = $error->getMessage();
                                 if ( $this->verbose ) {
-                                    $this->add_error( $error_key, 'results' );
+                                    $this->add_error( $error_msg, 'results' );
                                 } else {
-                                    if ( ! isset( $seen_unserialize_errors[ $error_key ] ) ) {
-                                        $seen_unserialize_errors[ $error_key ] = 0;
+                                    if ( ! isset( $seen_unserialize_errors[ $error_msg ] ) ) {
+                                        $seen_unserialize_errors[ $error_msg ] = 0;
                                     }
-                                    $seen_unserialize_errors[ $error_key ]++;
+                                    $seen_unserialize_errors[ $error_msg ]++;
                                 }
                                 continue;
                             }
