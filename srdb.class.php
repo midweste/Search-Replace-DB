@@ -903,6 +903,44 @@ class icit_srdb {
 
 
     /**
+     * Check if a string contains glob pattern characters.
+     *
+     * @param string $pattern
+     *
+     * @return bool
+     */
+    public function is_glob_pattern( $pattern ) {
+        return preg_match( '/[*?\[\]]/', $pattern ) === 1;
+    }
+
+
+    /**
+     * Check if a table name matches any pattern in a list.
+     * Supports exact match and glob patterns (*, ?, []).
+     *
+     * @param string $table    The table name to check.
+     * @param array  $patterns List of table names or glob patterns.
+     *
+     * @return bool
+     */
+    public function table_matches_list( $table, $patterns ) {
+        foreach ( $patterns as $pattern ) {
+            if ( $this->is_glob_pattern( $pattern ) ) {
+                if ( fnmatch( $pattern, $table ) ) {
+                    return true;
+                }
+            } else {
+                if ( $table === $pattern ) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+
+    /**
      * The main loop triggered in step 5. Up here to keep it out of the way of the
      * HTML. This walks every table in the db that was selected in step 3 and then
      * walks every row and column replacing all occurences of a string with another.
@@ -957,15 +995,36 @@ class icit_srdb {
         if ( empty( $tables ) ) {
             $all_tables = $this->get_tables();
             $tables     = array_keys( $all_tables );
+        } else {
+            // Resolve any glob patterns in the include list against available tables
+            $has_globs = false;
+            foreach ( $tables as $pattern ) {
+                if ( $this->is_glob_pattern( $pattern ) ) {
+                    $has_globs = true;
+                    break;
+                }
+            }
+            if ( $has_globs ) {
+                $all_tables      = $this->get_tables();
+                $all_table_names = array_keys( $all_tables );
+                $resolved        = array();
+                foreach ( $all_table_names as $table_name ) {
+                    if ( $this->table_matches_list( $table_name, $tables ) ) {
+                        $resolved[] = $table_name;
+                    }
+                }
+                $tables = $resolved;
+            }
         }
 
         if ( is_array( $tables ) && ! empty( $tables ) ) {
 
             foreach ( $tables as $table ) {
-                if ( in_array( $table, $exclude_tables ) ) {
+                if ( ! empty( $exclude_tables ) && $this->table_matches_list( $table, $exclude_tables ) ) {
                     $this->add_error( 'Ignoring Table: ' . $table );
                     continue;
                 }
+
                 $encoding = $this->get_table_character_set( $table );
                 switch ( $encoding ) {
 

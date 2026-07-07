@@ -39,8 +39,8 @@ $opts = array(
     [ 'P:', 'port:', 'Optional. Port on database server to connect to. The default is 3306. (MySQL default port).', ],
     [ 's:', 'search:', 'String to search for or `preg_replace()` style regular expression.', ],
     [ 'r:', 'replace:', 'None empty string to replace search with or `preg_replace()` style replacement.', ],
-    [ 't:', 'tables:', 'If set only runs the script on the specified table, comma separate for multiple values.', ],
-    [ 'w:', 'exclude-tables:', 'If set excluded the specified tables, comma separate for multuple values.', ],
+    [ 't:', 'tables:', 'If set only runs the script on the specified table, comma separate for multiple values. Supports glob patterns (e.g. "wp_7_*").', ],
+    [ 'w:', 'exclude-tables:', 'If set excludes the specified tables, comma separate for multiple values. Supports glob patterns (e.g. "wp_woo_*").', ],
     [
         'i:',
         'include-cols:',

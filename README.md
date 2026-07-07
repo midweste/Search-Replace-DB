@@ -90,11 +90,12 @@ Type `php srdb.cli.php` to run the program. Type `php srdb.cli.php
 
   -t, --tables
     If set only runs the script on the specified table, comma
-    separate for multiple values.
+    separate for multiple values. Supports glob patterns
+    (e.g. "wp_7_*").
 
   -w, --exclude-tables
-    If set excluded the specified tables, comma separate for multuple
-    values.
+    If set excludes the specified tables, comma separate for multiple
+    values. Supports glob patterns (e.g. "wp_woo_*").
 
   -i, --include-cols
     If set only runs the script on the specified columns, comma
